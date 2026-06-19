@@ -1,0 +1,35 @@
+# Build output
+build/
+out/
+target/
+
+# Gradle internals
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Git internals
+.git/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Initializr boilerplate
+HELP.md
+
+# Runtime / temp
+tmp/
+temp/
+*.tmp
+*.swp
