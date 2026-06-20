@@ -30,7 +30,8 @@ com.notedrop.notedrop
 │   ├── OrderService.java
 │   ├── ReviewService.java
 │   ├── TasteProfileService.java       # 가중 평균으로 TasteProfile 갱신
-│   └── RecommendationService.java     # 인메모리 코사인 유사도 계산
+│   ├── RecommendationService.java     # 인메모리 코사인 유사도 계산
+│   └── OnboardingService.java         # 회원가입 직후 TasteProfile 초기화
 ├── repository/
 │   ├── UserRepository.java
 │   ├── CoffeeBeanRepository.java      # BETWEEN 파생 쿼리 포함
@@ -44,6 +45,7 @@ com.notedrop.notedrop
 │   ├── User.java
 │   ├── TasteProfile.java
 │   ├── CoffeeBean.java
+│   ├── Cafe.java                        # 카페 정보 + CoffeeBean @ManyToMany
 │   ├── Product.java
 │   ├── FlashSaleEvent.java
 │   ├── Order.java
@@ -128,6 +130,7 @@ User (1) ──── (N) Review
 
 CoffeeBean (1) ── (N) Product
 CoffeeBean (1) ── (N) Review
+CoffeeBean (N) ── (N) Cafe  [cafe_coffee_beans 조인 테이블]
 
 Product (1) ───── (N) Order
 Product (1) ───── (1) FlashSaleEvent  [is_flash_sale=true]
@@ -177,6 +180,8 @@ public abstract class BaseEntity {
 #### coffee_beans
 | 컬럼 | 타입 |
 |------|------|
+| name | VARCHAR(100) NOT NULL |
+| description | TEXT |
 | origin | VARCHAR(100) |
 | processing_method | ENUM('WASHED','NATURAL','HONEY','ANAEROBIC') |
 | roast_level | ENUM('LIGHT','MEDIUM_LIGHT','MEDIUM','MEDIUM_DARK','DARK') |
@@ -232,6 +237,24 @@ public abstract class BaseEntity {
 
 인덱스: `UNIQUE idx_reviews_user_product (user_id, product_id)`
 
+#### cafes
+| 컬럼 | 타입 |
+|------|------|
+| name | VARCHAR(100) NOT NULL |
+| address | VARCHAR(255) NOT NULL |
+| operating_hours | VARCHAR(255) NOT NULL |
+| map_url | VARCHAR(500) NOT NULL |
+
+인덱스: `idx_cafes_name (name)`
+
+#### cafe_coffee_beans (조인 테이블)
+| 컬럼 | 타입 |
+|------|------|
+| cafe_id | BIGINT FK → cafes.id (CASCADE DELETE) |
+| coffee_bean_id | BIGINT FK → coffee_beans.id |
+
+복합 PK `(cafe_id, coffee_bean_id)` — 카페-원두 중복 연결 방지
+
 ---
 
 ## 3. 기술 스택 통합 가이드
@@ -268,7 +291,8 @@ src/main/resources/db/migration/
 ├── V3__create_products.sql
 ├── V4__create_flash_sale_events.sql
 ├── V5__create_orders.sql
-└── V6__create_reviews.sql
+├── V6__create_reviews.sql
+└── V7__create_cafes.sql              # cafes + cafe_coffee_beans 조인 테이블
 ```
 
 ---
@@ -536,6 +560,10 @@ POST /api/auth/signup
 POST /api/auth/login          → {accessToken, refreshToken}
 POST /api/auth/refresh
 
+# 온보딩 (인증 필요, 회원가입 직후 1회)
+GET  /api/onboarding/questions  → { beginner:[...], enthusiast:[...], brands:[...] }
+POST /api/onboarding            → 201 / 409(이미 완료)
+
 # 원두 (공개)
 GET  /api/beans               ?origin=&roastLevel=&page=&size=
 GET  /api/beans/{id}
@@ -544,8 +572,8 @@ GET  /api/beans/{id}
 GET  /api/products
 GET  /api/products/{id}
 
-# 추천 (인증 필요)
-GET  /api/recommendations
+# 추천 (인증 필요) — 원두 + 카페 통합 응답
+GET  /api/recommendations       → { beans: [...], cafes: [...] }
 
 # 플래시 세일 (인증 필요)
 GET  /api/flash-sales/active
