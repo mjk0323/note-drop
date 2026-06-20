@@ -31,4 +31,13 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private TasteProfile tasteProfile;
+
+    public static User create(String email, String encodedPassword, String nickname) {
+        User user = new User();
+        user.email = email;
+        user.password = encodedPassword;
+        user.nickname = nickname;
+        user.role = UserRole.GUEST;
+        return user;
+    }
 }

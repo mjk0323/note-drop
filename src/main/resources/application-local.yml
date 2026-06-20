@@ -1,7 +1,7 @@
 spring:
   datasource:
     master:
-      url: jdbc:mysql://localhost:3306/notedrop?serverTimezone=UTC&characterEncoding=UTF-8
+      jdbc-url: jdbc:mysql://localhost:3306/notedrop?serverTimezone=UTC&characterEncoding=UTF-8
       username: root
       password: root
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,7 +11,7 @@ spring:
         max-lifetime: 1800000
         leak-detection-threshold: 5000
     replica:
-      url: jdbc:mysql://localhost:3306/notedrop?serverTimezone=UTC&characterEncoding=UTF-8
+      jdbc-url: jdbc:mysql://localhost:3306/notedrop?serverTimezone=UTC&characterEncoding=UTF-8
       username: root
       password: root
       driver-class-name: com.mysql.cj.jdbc.Driver
